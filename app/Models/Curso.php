@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Curso extends Model
 {
+    use HasFactory;
+
     protected $fillable = ['sigla', 'nombre_curso', 'creditos'];
 
     public function grupos()

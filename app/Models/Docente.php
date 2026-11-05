@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Docente extends Model
 {
+    use HasFactory;
+
     protected $fillable = ['cod_empleado', 'nombre_empleado', 'apellidos_empleado'];
 
     public function grupos()
