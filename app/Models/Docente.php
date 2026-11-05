@@ -1,0 +1,23 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Docente extends Model
+{
+    use HasFactory;
+
+    protected $fillable = ['cod_empleado', 'nombre_empleado', 'apellidos_empleado'];
+
+    public function grupos()
+    {
+        return $this->belongsToMany(Grupo::class, 'docente_grupo');
+    }
+
+    public function estudiantesAconsejados()
+    {
+        return $this->hasMany(Estudiante::class, 'consejero_id');
+    }
+}
