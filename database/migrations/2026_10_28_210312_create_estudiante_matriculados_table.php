@@ -6,26 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-       Schema::create('estudiante_matriculados', function (Blueprint $table) {
+       Schema::create('estudiantes_matriculados', function (Blueprint $table) {
     $table->id();
     $table->foreignId('grupo_id')->constrained('grupos')->cascadeOnDelete();
     $table->foreignId('estudiante_id')->constrained('estudiantes');
-    $table->float('nota')->nullable(); // se registra al finalizar el curso
+    $table->float('nota')->nullable();
     $table->unique(['grupo_id', 'estudiante_id']);
     $table->timestamps();
 });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('estudiante_matriculados');
+        Schema::dropIfExists('estudiantes_matriculados');
     }
 };

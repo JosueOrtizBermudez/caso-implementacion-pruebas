@@ -6,12 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-      Schema::create('docente_grupo', function (Blueprint $table) {
+      Schema::create('grupo_docente', function (Blueprint $table) {
     $table->id();
     $table->foreignId('grupo_id')->constrained('grupos')->cascadeOnDelete();
     $table->foreignId('docente_id')->constrained('docentes');
@@ -20,11 +17,8 @@ return new class extends Migration
 });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('docente_grupo');
+        Schema::dropIfExists('grupo_docente');
     }
 };
