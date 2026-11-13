@@ -2,22 +2,25 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class EstudianteMatriculado extends Model
+class EstudianteMatriculado extends Pivot
 {
-    protected $table = 'estudiante_matriculados';
+    protected $table = 'estudiantes_matriculados';
+
+    public $incrementing = true;
 
     protected $fillable = ['grupo_id', 'estudiante_id', 'nota'];
 
     protected $casts = ['nota' => 'float'];
 
-    public function grupo()
+    public function grupo(): BelongsTo
     {
         return $this->belongsTo(Grupo::class);
     }
 
-    public function estudiante()
+    public function estudiante(): BelongsTo
     {
         return $this->belongsTo(Estudiante::class);
     }

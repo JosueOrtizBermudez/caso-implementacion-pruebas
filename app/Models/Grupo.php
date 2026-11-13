@@ -5,91 +5,92 @@ namespace App\Models;
 use DomainException;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use InvalidArgumentException;
 
 class Grupo extends Model
 {
     use HasFactory;
 
-    
-    public const MIN_DOCENTES = 1;
-    public const MAX_DOCENTES = 2;
-
-   
-    public const MIN_ESTUDIANTES = 15;
-
     protected $fillable = ['numero_ciclo', 'ano', 'numero_grupo', 'abierto', 'curso_id'];
 
-    protected $casts = ['abierto' => 'boolean'];
+    protected function casts(): array
+    {
+        return ['abierto' => 'boolean'];
+    }
 
-    public function curso()
+    public function curso(): BelongsTo
     {
         return $this->belongsTo(Curso::class);
     }
 
-    public function docentes()
+    public function docentes(): BelongsToMany
     {
-        return $this->belongsToMany(Docente::class, 'docente_grupo');
+        return $this->belongsToMany(Docente::class, 'grupo_docente');
     }
 
-    public function matriculas()
+    public function matriculas(): HasMany
     {
         return $this->hasMany(EstudianteMatriculado::class);
     }
 
-    public function estudiantes()
+    public function estudiantes(): BelongsToMany
     {
-        return $this->belongsToMany(Estudiante::class, 'estudiante_matriculados')
+        return $this->belongsToMany(Estudiante::class, 'estudiantes_matriculados')
+                    ->using(EstudianteMatriculado::class)
                     ->withPivot('nota')
                     ->withTimestamps();
     }
 
-    /**
-     * RN-02: asigna un docente al grupo. Un grupo no puede tener más de 2 docentes.
-     *
-     * @throws DomainException si el grupo ya tiene 2 docentes
-     */
     public function asignarDocente(Docente $docente): void
     {
-        if ($this->docentes()->count() >= self::MAX_DOCENTES) {
-            throw new DomainException('Un grupo no puede tener más de ' . self::MAX_DOCENTES . ' docentes.');
+        if ($this->docentes()->count() >= 2) {
+            throw new DomainException('Un grupo no puede tener más de 2 docentes.');
         }
 
         $this->docentes()->attach($docente->id);
         $this->unsetRelation('docentes');
     }
 
-    
     public function matricular(Estudiante $estudiante): void
     {
-        $this->estudiantes()->attach($estudiante->id, ['nota' => null]);
+        $this->estudiantes()->attach($estudiante->id);
         $this->unsetRelation('estudiantes');
     }
 
     public function puedeAbrirse(): bool
     {
-        $docentes = $this->docentes()->count();
-        $estudiantes = $this->estudiantes()->count();
-
-        return $docentes >= self::MIN_DOCENTES
-            && $docentes <= self::MAX_DOCENTES
-            && $estudiantes >= self::MIN_ESTUDIANTES;
+        return $this->docentes()->count() >= 1
+            && $this->estudiantes()->count() >= 15;
     }
 
-    /**
-     * Abre el grupo y lo guarda en la base de datos.
-     *
-     * @throws DomainException si el grupo no cumple las reglas para abrirse
-     */
     public function abrir(): void
     {
         if (! $this->puedeAbrirse()) {
-            throw new DomainException(
-                'El grupo necesita al menos ' . self::MIN_DOCENTES . ' docente y '
-                . self::MIN_ESTUDIANTES . ' estudiantes matriculados para abrirse.'
-            );
+            throw new DomainException('El grupo no cumple los requisitos para abrirse.');
         }
 
         $this->abierto = true;
         $this->save();
+    }
+
+    public function registrarNota(Estudiante $estudiante, float $nota): void
+    {
+        if ($nota < 0 || $nota > 10) {
+            throw new InvalidArgumentException('La nota debe estar entre 0 y 10.');
+        }
+
+        $matricula = EstudianteMatriculado::where('grupo_id', $this->id)
+            ->where('estudiante_id', $estudiante->id)
+            ->first();
+
+        if ($matricula === null) {
+            throw new DomainException('El estudiante no está matriculado en este grupo.');
+        }
+
+        $matricula->nota = $nota;
+        $matricula->save();
     }
 }
